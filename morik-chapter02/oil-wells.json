@@ -1,0 +1,16 @@
+{
+  "note": "Approximate field-centre coordinates [lon, lat]. Verify each against the cited source before final render; remove any entry you cannot verify.",
+  "wells": [
+    {"id":"kirkuk","name":"KIRKUK","country":"Iraq","lonlat":[44.39,35.47],"group":"disputed","confidence":"high","check":"Iraq Ministry of Oil / EIA Iraq country analysis"},
+    {"id":"taqtaq","name":"TAQ TAQ","country":"Iraq (KRI)","lonlat":[44.62,35.88],"group":"kri","confidence":"medium","check":"KRG Ministry of Natural Resources"},
+    {"id":"khurmala","name":"KHURMALA","country":"Iraq (KRI)","lonlat":[44.20,36.00],"group":"kri","confidence":"medium","check":"KRG Ministry of Natural Resources"},
+    {"id":"shaikan","name":"SHAIKAN","country":"Iraq (KRI)","lonlat":[43.40,36.85],"group":"kri","confidence":"medium","check":"KRG Ministry of Natural Resources"},
+    {"id":"rumaila","name":"RUMAILA","country":"Iraq","lonlat":[47.35,30.45],"group":"south","confidence":"high","check":"EIA / Iraq Ministry of Oil"},
+    {"id":"majnoon","name":"MAJNOON","country":"Iraq","lonlat":[47.60,31.00],"group":"south","confidence":"medium","check":"EIA / Iraq Ministry of Oil"},
+    {"id":"rmelan","name":"RMELAN","country":"Syria","lonlat":[41.95,37.00],"group":"syria","confidence":"high","check":"Syrian Ministry of Petroleum / published field lists"},
+    {"id":"omar","name":"OMAR","country":"Syria","lonlat":[40.70,35.00],"group":"syria","confidence":"high","check":"published field lists"},
+    {"id":"batman","name":"BATMAN","country":"Turkey","lonlat":[41.10,37.85],"group":"turkey","confidence":"high","check":"TPAO"},
+    {"id":"gachsaran","name":"GACHSARAN","country":"Iran","lonlat":[50.80,30.35],"group":"iran","confidence":"high","check":"NIOC / EIA Iran"},
+    {"id":"ahvaz","name":"AHVAZ","country":"Iran","lonlat":[48.75,31.30],"group":"iran","confidence":"medium","check":"NIOC / EIA Iran"}
+  ]
+}
