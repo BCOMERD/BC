@@ -1,0 +1,56 @@
+<!doctype html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>محرر المشاريع</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<header id="top">
+  <strong>محرر المشاريع</strong>
+  <span id="title"></span>
+  <span class="spacer"></span>
+  <button id="btn-open">فتح مشروع</button>
+  <button id="btn-save">حفظ المشروع</button>
+  <button id="btn-export" class="primary">تصدير فيديو (WebM)</button>
+  <input type="file" id="file-open" accept=".json" hidden>
+</header>
+
+<main>
+  <section id="stage">
+    <div id="canvas-wrap"><canvas id="canvas" width="1280" height="720"></canvas></div>
+    <div id="transport">
+      <button id="btn-play">▶ تشغيل</button>
+      <button id="btn-split" title="قصّ المقطع المحدد عند المؤشر">✂ قصّ</button>
+      <span id="timecode">0:00.0 / 0:00.0</span>
+      <label>تكبير <input type="range" id="zoom" min="20" max="200" value="70"></label>
+    </div>
+  </section>
+
+  <aside id="side">
+    <div id="inspector"><p class="muted">اختر مقطعاً من المسارات لتعديله.</p></div>
+    <h3>التعليقات</h3>
+    <ul id="comments"></ul>
+  </aside>
+</main>
+
+<section id="timeline">
+  <div id="addbar">
+    <button data-add="text">+ نص</button>
+    <button data-add="image">+ صورة</button>
+    <button data-add="audio">+ صوت</button>
+    <button data-add="video">+ فيديو</button>
+    <input type="file" id="file-add" hidden>
+  </div>
+  <div id="tl-scroll">
+    <div id="tl-inner">
+      <div id="ruler"></div>
+      <div id="tracks"></div>
+      <div id="playhead"></div>
+    </div>
+  </div>
+</section>
+<script src="app.js"></script>
+</body>
+</html>
