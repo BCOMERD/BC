@@ -1,37 +1,37 @@
 {
   "version": 1,
-  "meta": { "title": "مشروع تجريبي", "width": 1280, "height": 720, "fps": 30, "duration": 12 },
+  "meta": { "title": "Morning Journey", "width": 1280, "height": 720, "fps": 30, "duration": 12, "status": "draft" },
   "assets": {
-    "img1": { "type": "image", "src": "assets/scene1.svg", "name": "مشهد 1", "source": "ai", "prompt": "شروق الشمس فوق البحر" },
-    "img2": { "type": "image", "src": "assets/scene2.svg", "name": "مشهد 2", "source": "ai", "prompt": "أمواج زرقاء هادئة" },
-    "img3": { "type": "image", "src": "assets/scene3.svg", "name": "مشهد 3", "source": "ai", "prompt": "جبال خضراء عند الغروب" },
-    "vo1": { "type": "audio", "src": "assets/voice1.wav", "name": "تعليق 1", "source": "ai", "prompt": "مرحباً بكم في رحلتنا" },
-    "vo2": { "type": "audio", "src": "assets/voice2.wav", "name": "تعليق 2", "source": "ai", "prompt": "نبدأ من البحر" },
-    "vo3": { "type": "audio", "src": "assets/voice3.wav", "name": "تعليق 3", "source": "ai", "prompt": "ونصل إلى الجبال" },
-    "bgm": { "type": "audio", "src": "assets/music.wav", "name": "موسيقى", "source": "ai", "prompt": "موسيقى هادئة" }
+    "img1": { "type": "image", "src": "assets/scene1.svg", "name": "Sunrise", "source": "ai", "prompt": "Sunrise over the sea" },
+    "img2": { "type": "image", "src": "assets/scene2.svg", "name": "Waves", "source": "ai", "prompt": "Calm blue waves" },
+    "img3": { "type": "image", "src": "assets/scene3.svg", "name": "Mountains", "source": "ai", "prompt": "Green mountains at sunset" },
+    "vo1": { "type": "audio", "src": "assets/voice1.wav", "name": "Voice 1", "source": "ai", "prompt": "Welcome to our journey" },
+    "vo2": { "type": "audio", "src": "assets/voice2.wav", "name": "Voice 2", "source": "ai", "prompt": "We start at the sea in Spain" },
+    "vo3": { "type": "audio", "src": "assets/voice3.wav", "name": "Voice 3", "source": "ai", "prompt": "And arrive at the mountains" },
+    "bgm": { "type": "audio", "src": "assets/music.wav", "name": "Soft music", "source": "ai", "prompt": "Calm background music" }
   },
   "tracks": [
-    { "id": "t-titles", "type": "text", "name": "عناوين", "clips": [
-      { "id": "c-title1", "start": 0, "duration": 4, "text": "رحلة الصباح", "style": { "size": 72, "color": "#ffffff", "y": 0.18, "bg": "" }, "source": "ai" },
-      { "id": "c-title2", "start": 4, "duration": 4, "text": "على الشاطئ", "style": { "size": 72, "color": "#ffffff", "y": 0.18, "bg": "" }, "source": "ai" },
-      { "id": "c-title3", "start": 8, "duration": 4, "text": "في الجبال", "style": { "size": 72, "color": "#ffffff", "y": 0.18, "bg": "" }, "source": "ai" }
+    { "id": "t-titles", "type": "text", "name": "Titles", "clips": [
+      { "id": "c-title1", "start": 0, "duration": 4, "text": "Morning Journey", "style": { "size": 72, "color": "#ffffff", "y": 0.18, "bg": "" }, "source": "ai" },
+      { "id": "c-title2", "start": 4, "duration": 4, "text": "On the Beach", "style": { "size": 72, "color": "#ffffff", "y": 0.18, "bg": "" }, "source": "ai" },
+      { "id": "c-title3", "start": 8, "duration": 4, "text": "In the Mountains", "style": { "size": 72, "color": "#ffffff", "y": 0.18, "bg": "" }, "source": "ai" }
     ]},
-    { "id": "t-subs", "type": "text", "name": "ترجمة", "clips": [
-      { "id": "c-sub1", "start": 0.2, "duration": 3.6, "text": "مرحباً بكم في رحلتنا", "style": { "size": 40, "color": "#ffe27a", "y": 0.86, "bg": "rgba(0,0,0,.55)" }, "source": "ai" },
-      { "id": "c-sub2", "start": 4.2, "duration": 3.6, "text": "نبدأ من البحر", "style": { "size": 40, "color": "#ffe27a", "y": 0.86, "bg": "rgba(0,0,0,.55)" }, "source": "ai" },
-      { "id": "c-sub3", "start": 8.2, "duration": 3.6, "text": "ونصل إلى الجبال", "style": { "size": 40, "color": "#ffe27a", "y": 0.86, "bg": "rgba(0,0,0,.55)" }, "source": "ai" }
+    { "id": "t-subs", "type": "text", "name": "Subtitles", "clips": [
+      { "id": "c-sub1", "start": 0.2, "duration": 3.6, "text": "Welcome to our journey", "style": { "size": 40, "color": "#ffe27a", "y": 0.86, "bg": "rgba(0,0,0,.55)" }, "source": "ai" },
+      { "id": "c-sub2", "start": 4.2, "duration": 3.6, "text": "We start at the sea in Spain", "style": { "size": 40, "color": "#ffe27a", "y": 0.86, "bg": "rgba(0,0,0,.55)" }, "comment": "Remove the country name", "source": "ai" },
+      { "id": "c-sub3", "start": 8.2, "duration": 3.6, "text": "And arrive at the mountains", "style": { "size": 40, "color": "#ffe27a", "y": 0.86, "bg": "rgba(0,0,0,.55)" }, "source": "ai" }
     ]},
-    { "id": "t-visual", "type": "visual", "name": "صور / فيديو", "clips": [
-      { "id": "c-img1", "asset": "img1", "start": 0, "duration": 4, "transform": { "x": 0, "y": 0, "scale": 1 }, "comment": "", "source": "ai" },
-      { "id": "c-img2", "asset": "img2", "start": 4, "duration": 4, "transform": { "x": 0, "y": 0, "scale": 1 }, "comment": "بدّل الصورة بلقطة حقيقية للبحر", "source": "ai" },
-      { "id": "c-img3", "asset": "img3", "start": 8, "duration": 4, "transform": { "x": 0, "y": 0, "scale": 1 }, "comment": "", "source": "ai" }
+    { "id": "t-visual", "type": "visual", "name": "Video / Images", "clips": [
+      { "id": "c-img1", "asset": "img1", "start": 0, "duration": 4, "transform": { "x": 0, "y": 0, "scale": 1 }, "source": "ai" },
+      { "id": "c-img2", "asset": "img2", "start": 4, "duration": 4, "transform": { "x": 0, "y": 0, "scale": 1 }, "comment": "Replace with real beach footage", "source": "ai" },
+      { "id": "c-img3", "asset": "img3", "start": 8, "duration": 4, "transform": { "x": 0, "y": 0, "scale": 1 }, "source": "ai" }
     ]},
-    { "id": "t-voice", "type": "audio", "name": "تعليق صوتي", "clips": [
+    { "id": "t-voice", "type": "audio", "name": "Voiceover", "clips": [
       { "id": "c-vo1", "asset": "vo1", "start": 0.2, "duration": 3.6, "in": 0, "volume": 1, "source": "ai" },
       { "id": "c-vo2", "asset": "vo2", "start": 4.2, "duration": 3.6, "in": 0, "volume": 1, "source": "ai" },
       { "id": "c-vo3", "asset": "vo3", "start": 8.2, "duration": 3.6, "in": 0, "volume": 1, "source": "ai" }
     ]},
-    { "id": "t-music", "type": "audio", "name": "موسيقى", "clips": [
+    { "id": "t-music", "type": "audio", "name": "Music", "clips": [
       { "id": "c-bgm", "asset": "bgm", "start": 0, "duration": 12, "in": 0, "volume": 0.35, "source": "ai" }
     ]}
   ]

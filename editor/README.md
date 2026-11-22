@@ -1,42 +1,47 @@
-# محرر المشاريع متعدد المسارات
+# ReCut — AI video projects you can edit
 
-كلود (أو أي مولّد) لا يسلّمك فيديو مغلقاً، بل **مشروعاً** على مسارات: صور/فيديو، تعليق صوتي، موسيقى، عناوين، ترجمة.
-تفتحه هنا وتراجع وتعدّل أي عنصر، ثم تصدّر.
+An AI doesn't hand you a flat video. It hands you a **project**: video/images, voiceover, music, titles and subtitles on separate tracks with exact timing. You open it, review it, edit anything, comment on any shot, and export.
 
-## التشغيل
+## Run
 ```bash
 cd editor
-python3 -m http.server 8000   # أو أي خادم ملفات
-# افتح http://localhost:8000
+python3 -m http.server 8000     # or any static file server
+# open http://localhost:8000
 ```
-بدون أي اعتماديات أو بناء. يحمّل `sample/project.json` تلقائياً؛ "فتح مشروع" يفتح أي ملف مشروع.
+No build step, no dependencies. Use **Chrome or Edge** for folder projects.
 
-## ما يمكنك فعله
-- مسارات متعددة بمعاينة متزامنة (صورة + صوت + نص) وتشغيل بالمسافة.
-- سحب المقطع لتحريكه، سحب الحواف لتغيير المدة، قصّ عند المؤشر.
-- تعديل النص (حجم/لون/موضع/خلفية)، مستوى الصوت، التكبير والإزاحة.
-- استبدال أي صورة/صوت/فيديو بملفك، وإضافة عناصر جديدة.
-- **تعليق على كل لقطة** (يظهر 💬 على المقطع ولوحة تعليقات للقفز إليه).
-- "نسخ طلب إعادة التوليد": ينسخ JSON فيه الـ prompt والتعليق لتعطيه لكلود فيعيد توليد هذا العنصر فقط.
-- حفظ `project.json` وتصدير WebM (فيديو + صوت).
+## Using it
+| Action | How |
+|---|---|
+| Open an AI-generated project | **Open → Project folder…** (a folder with `project.json` + `assets/`) |
+| Try it | **Open → Sample project** |
+| Add media | **Upload**, or drop files anywhere on the window |
+| Edit | Click a clip → **Properties** (text, timing, volume, zoom/shift) |
+| Move / trim / split | Drag a clip, drag its edges, **S** at the playhead |
+| Comment on a shot | Select a clip → **Comments** tab (or the comment box in Properties) |
+| Send changes back to the AI | **Request AI changes** copies every open comment as JSON; paste it to Claude |
+| Review status | Draft → In review → Approved |
+| Save / export | **Save** writes back to the project folder (or downloads `project.json`); **Export** renders WebM with audio |
 
-## صيغة المشروع (`project.json`)
+Shortcuts: `Space` play · `S` split · `Del` delete · `Ctrl+Z / Ctrl+Shift+Z` undo/redo · `Ctrl+D` duplicate · `←/→` step (Shift = 1 s) · `Ctrl+S` save.
+
+## Project format (`project.json`)
 ```
-meta    { title, width, height, fps, duration }
+meta    { title, width, height, fps, duration, status: draft|review|approved }
 assets  { id: { type: image|video|audio, src, name, source: ai|user, prompt } }
-tracks  [ { id, type: visual|audio|text, name, clips: [...] } ]
-clip    { id, start, duration, source, comment,
+tracks  [ { id, type: visual|audio|text, name, muted?, hidden?, clips: [...] } ]
+clip    { id, start, duration, source, comment?, commentDone?,
           asset (visual/audio) | text + style{size,color,y,bg} (text),
           in, volume (audio/video), transform{x,y,scale} (visual) }
 ```
-المسار الأعلى في القائمة هو الأعلى بصرياً. مسارات الصوت والنص بلا تداخل داخل المسار الواحد.
+The top track in the list is drawn on top. Audio and text tracks cannot overlap within a track.
 
-تحقق من أي مشروع يولّده كلود قبل فتحه:
+Validate AI output before opening it:
 ```bash
 node tools/validate.mjs path/to/project.json
 ```
 
-## ملاحظات صريحة
-- صوت وصور العيّنة **تجريبية** (`tools/make-sample-assets.mjs`)؛ لا يوجد توليد ذكاء اصطناعي متصل بعد.
-- التصدير يعمل بالزمن الحقيقي عبر `MediaRecorder` (مدة الفيديو = مدة التصدير) وصيغته WebM. MP4 يحتاج ffmpeg أو تحويلاً لاحقاً.
-- ما هو غير موجود بعد: الانتقالات، المؤثرات، الـ keyframes، الخرائط، التراجع (undo).
+## Known limits
+- Sample assets are placeholders (`tools/make-sample-assets.mjs`). No AI generation is wired into the app yet; today Claude builds the project folder and applies your comments.
+- Export is real-time WebM (`MediaRecorder`), so a 5-minute video takes 5 minutes to export. MP4 needs ffmpeg or a later conversion.
+- Not built yet: transitions, effects, keyframes, maps, multi-user review.

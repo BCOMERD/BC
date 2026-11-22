@@ -1,5 +1,5 @@
 // node tools/validate.mjs path/to/project.json
-// يتحقق من صحة ملف المشروع قبل فتحه في المحرر (مفيد لمخرجات كلود).
+// Validates a project.json before opening it in the editor (useful for AI output).
 import { readFileSync } from 'node:fs';
 
 const file = process.argv[2];
@@ -8,36 +8,36 @@ if (!file) { console.error('usage: node tools/validate.mjs <project.json>'); pro
 const errors = [];
 const err = (m) => errors.push(m);
 let p;
-try { p = JSON.parse(readFileSync(file, 'utf8')); } catch (e) { console.error('JSON غير صالح:', e.message); process.exit(1); }
+try { p = JSON.parse(readFileSync(file, 'utf8')); } catch (e) { console.error('Invalid JSON:', e.message); process.exit(1); }
 
-if (p.version !== 1) err('version يجب أن يكون 1');
+if (p.version !== 1) err('version must be 1');
 const m = p.meta || {};
-for (const k of ['width', 'height', 'fps', 'duration']) if (!(m[k] > 0)) err(`meta.${k} مطلوب (>0)`);
+for (const k of ['width', 'height', 'fps', 'duration']) if (!(m[k] > 0)) err(`meta.${k} is required (> 0)`);
 const assets = p.assets || {};
 const TYPES = { visual: ['image', 'video'], audio: ['audio', 'video'], text: [] };
 for (const [id, a] of Object.entries(assets)) {
-  if (!['image', 'video', 'audio'].includes(a.type)) err(`asset ${id}: type غير صالح`);
-  if (!a.src) err(`asset ${id}: src مفقود`);
+  if (!['image', 'video', 'audio'].includes(a.type)) err(`asset ${id}: invalid type`);
+  if (!a.src) err(`asset ${id}: missing src`);
 }
 const ids = new Set();
 for (const t of p.tracks || []) {
-  if (!TYPES[t.type]) err(`track ${t.id}: type غير صالح (${t.type})`);
+  if (!TYPES[t.type]) err(`track ${t.id}: invalid type (${t.type})`);
   for (const c of t.clips || []) {
-    if (!c.id || ids.has(c.id)) err(`clip id مفقود أو مكرر: ${c.id}`);
+    if (!c.id || ids.has(c.id)) err(`clip id missing or duplicated: ${c.id}`);
     ids.add(c.id);
-    if (!(c.start >= 0)) err(`clip ${c.id}: start غير صالح`);
-    if (!(c.duration > 0)) err(`clip ${c.id}: duration غير صالح`);
-    if (t.type === 'text') { if (typeof c.text !== 'string') err(`clip ${c.id}: text مطلوب`); }
+    if (!(c.start >= 0)) err(`clip ${c.id}: invalid start`);
+    if (!(c.duration > 0)) err(`clip ${c.id}: invalid duration`);
+    if (t.type === 'text') { if (typeof c.text !== 'string') err(`clip ${c.id}: text is required`); }
     else {
       const a = assets[c.asset];
-      if (!a) err(`clip ${c.id}: asset "${c.asset}" غير موجود`);
-      else if (!TYPES[t.type].includes(a.type)) err(`clip ${c.id}: نوع الأصل ${a.type} لا يناسب مسار ${t.type}`);
+      if (!a) err(`clip ${c.id}: asset "${c.asset}" not found`);
+      else if (!TYPES[t.type].includes(a.type)) err(`clip ${c.id}: asset type ${a.type} does not fit track type ${t.type}`);
     }
   }
-  if (t.type !== 'visual') { // لا تداخل على مسارات الصوت/النص
+  if (t.type !== 'visual') { // no overlaps on audio/text tracks
     const cs = [...(t.clips || [])].sort((a, b) => a.start - b.start);
-    for (let i = 1; i < cs.length; i++) if (cs[i].start < cs[i - 1].start + cs[i - 1].duration - 1e-6) err(`track ${t.id}: تداخل بين ${cs[i - 1].id} و ${cs[i].id}`);
+    for (let i = 1; i < cs.length; i++) if (cs[i].start < cs[i - 1].start + cs[i - 1].duration - 1e-6) err(`track ${t.id}: overlap between ${cs[i - 1].id} and ${cs[i].id}`);
   }
 }
 if (errors.length) { console.error(errors.map((e) => '✗ ' + e).join('\n')); process.exit(1); }
-console.log(`✓ ${file} صالح (${(p.tracks || []).length} مسارات، ${ids.size} مقطع)`);
+console.log(`✓ ${file} valid (${(p.tracks || []).length} tracks, ${ids.size} clips)`);
