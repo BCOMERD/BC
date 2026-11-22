@@ -1,34 +1,31 @@
-# MORÎK Short — الكولبر: نصف بالمئة
+# MORÎK Short — Kolbar: Half a Percent
 
-- **المصدر:** نص الفيديو الطويل «الكولبر: اقتصاد الموت على حدود إيران» (Kolber.docx)
-- **الصيغة:** 1080×1920 عمودي، 60 ثانية تقريباً
-- **الهدف:** جرّ المشاهد للفيديو الكامل
+- **Source:** the long video "Kolbar: The Economy of Death on Iran's Border" (Kolber.docx)
+- **Format:** 1080×1920 vertical, ~60 s, English voiceover + English captions
+- **Goal:** drive viewers to the full video on MORÎK
+- **Visuals:** cut from the existing long video (footage to be provided)
 
-## السيناريو
+## Script
 
-| # | الوقت | التعليق الصوتي | على الشاشة | الصورة |
-|---|---|---|---|---|
-| 1 | 0–4 | نصف بالمئة. | **0.5%** ضخم + وسم صغير «قراءة موريك» | سواد، الرقم يظهر بضربة صوت |
-| 2 | 4–10 | هذا كل ما يهرّبه الكولبر في إيران. الباقي يمرّ عبر قنوات أكبر بكثير. | 0.5% مقابل **99.5%** | ميناء ليلي بحاويات وشاحنات |
-| 3 | 10–18 | كولبر: كلمة كردية. "كول" يعني الظهر، و"بار" يعني الحِمل. رجل لا يملك إلا ظهره. | KOL + BAR = كولبر | ظلّ رجل منحنٍ تحت حمولة، بلا ملامح |
-| 4 | 18–30 | ثلاثون، أربعون، خمسون كيلو. ليلاً، بلا ضوء، عبر جبال زاغروس. والأجر؟ بضعة دولارات. | 30–50 كغ · بضعة دولارات | طابور ظلال على جبل مثلج ليلاً |
-| 5 | 30–44 | في 2024 وحدها: سبعة وخمسون قتيلاً، ومئتان واثنان وثمانون جريحاً. أكثر من ثمانين بالمئة برصاص مباشر. وبينهم تسعة عشر طفلاً. | **57 قتيلاً · 282 جريحاً** / **+80% رصاص مباشر** / **19 طفلاً** · المصدر: هنكاو | حمولة متروكة على الثلج، أثر أقدام |
-| 6 | 44–54 | فلماذا يطلق النظام النار على رجل يحمل رزقه على ظهره، ويترك من يهرّب المليارات؟ | السؤال نصاً | جبل في الظلام وضوء كشّاف بعيد |
-| 7 | 54–60 | الجواب في الفيديو الكامل. أنا موريك. | الفيديو الكامل على قناة MORÎK | شعار القناة |
+| # | Time | Voiceover | On screen |
+|---|---|---|---|
+| 1 | 0–4 | Half a percent. | **0.5%** + small tag "MORÎK estimate" |
+| 2 | 4–10 | That's all Iran's kolbars smuggle. The rest moves through far bigger channels. | 0.5% vs **99.5%** |
+| 3 | 10–18 | Kolbar is a Kurdish word. "Kol" means back. "Bar" means load. A man who owns nothing but his back. | KOL + BAR = KOLBAR |
+| 4 | 18–30 | Thirty, forty, fifty kilos. At night, with no light, across the Zagros mountains. The pay? A few dollars. | 30–50 kg · a few dollars |
+| 5 | 30–44 | In 2024 alone: 57 killed. 282 wounded. Over 80 percent by direct gunfire. Nineteen of them were children. | **57 killed · 282 wounded** / **80%+ direct gunfire** / **19 children** · Source: Hengaw |
+| 6 | 44–54 | So why does the regime shoot a man carrying his living on his back, and let the billions pass? | The question, word for word |
+| 7 | 54–60 | The answer is in the full video. | Full video on MORÎK |
 
-## المسارات في المشروع
-- **Titles:** الأرقام والجمل الكبيرة على الشاشة
-- **Subtitles:** نص التعليق كاملاً
-- **Video / Images:** 6 صور مولَّدة مع حركة تكبير بطيئة
-- **Voiceover:** 7 مقاطع، مقطع لكل مشهد، حتى يُعاد أي مقطع وحده
-- **Music:** موسيقى توتر منخفضة + ضربة صوت عند 0:00 و0:30
+## Project tracks
+- **Titles:** big numbers and on-screen lines
+- **Subtitles:** full voiceover text
+- **Video:** clips cut from the long video, one per scene
+- **Voiceover:** 7 separate clips, one per scene, so any line can be redone alone
+- **Music:** low tension bed + hits at 0:00 and 0:30
 
-## التحقق
-- ✅ هنكاو 2024: 57 قتيلاً و282 جريحاً (339 ضحية)، و19 طفلاً، وأكثر من 80% برصاص مباشر — [Hengaw](https://hengaw.net/en/reports-and-statistics-1/2025/01/article-3) · [Rudaw](https://rudaw.net/english/middleeast/iran/19012025)
-- ✅ هيومن رايتس ووتش، 8 تموز 2024: استخدام القوة القاتلة ضد الكولبر — [HRW](https://www.hrw.org/news/2024/07/08/iran-security-forces-killing-kurdish-border-couriers)
-- ⚠️ 0.5% / 99.5%: لا مصدر بعد (أولوية قصوى في ملاحظاتك). معروضة كـ«قراءة موريك» كما طلبت ملاحظاتك.
-- ⚠️ 30–50 كغ و«بضعة دولارات»: من النص، وما زالت على قائمة التحقق.
-
-## قواعد بصرية
-- ظلال وأشخاص بلا ملامح. لا وجوه لأشخاص حقيقيين، ولا دم.
-- لا لقطات من الإعلام أو صور ضحايا حقيقيين.
+## Fact check
+- ✅ Hengaw 2024: 57 killed, 282 wounded (339 total), 19 children, 80%+ direct gunfire — [Hengaw](https://hengaw.net/en/reports-and-statistics-1/2025/01/article-3) · [Rudaw](https://rudaw.net/english/middleeast/iran/19012025)
+- ✅ Human Rights Watch, 8 July 2024: lethal force against kolbars — [HRW](https://www.hrw.org/news/2024/07/08/iran-security-forces-killing-kurdish-border-couriers)
+- ⚠️ 0.5% / 99.5%: no source yet (top priority in your research notes). Shown as "MORÎK estimate".
+- ⚠️ 30–50 kg and "a few dollars": from the script, still on the research list.
