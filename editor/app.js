@@ -614,7 +614,11 @@ $('#btn-open-menu').onclick = (e) => { e.stopPropagation(); menu.hidden = !menu.
 addEventListener('click', () => (menu.hidden = true));
 menu.onclick = async (e) => {
   const b = e.target.closest('button'); if (!b) return;
-  if (dirty && !confirm('You have unsaved changes. Continue?')) return;
+  if (dirty && !(menu._armed === b.dataset.act && Date.now() - menu._armedAt < 4000)) {
+    menu._armed = b.dataset.act; menu._armedAt = Date.now(); e.stopPropagation();
+    return toast('You have unsaved changes. Click again to continue without saving.', true);
+  }
+  menu._armed = null;
   ({ home: showHome, 'open-folder': openFolder, 'open-file': () => $('#file-open').click(), 'open-sample': loadSample, new: newProject })[b.dataset.act]();
 };
 $('#file-open').onchange = async (e) => {
