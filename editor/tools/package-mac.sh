@@ -1,14 +1,17 @@
 #!/bin/bash
-# Builds ReCut-mac.zip: double-click launcher + app with its (pure JS) dependencies bundled.
+# Builds ReCut-mac.zip containing ReCut.app (unsigned) with the app and its pure-JS dependencies bundled.
 set -euo pipefail
 HERE="$(cd "$(dirname "$0")/.." && pwd)"
 OUT="${1:-$HERE/dist}"
-STAGE="$(mktemp -d)/ReCut"
-mkdir -p "$STAGE/app" "$OUT"
+STAGE="$(mktemp -d)"
+APPDIR="$STAGE/ReCut.app/Contents"
+mkdir -p "$APPDIR/MacOS" "$APPDIR/Resources/app" "$OUT"
 cd "$HERE"
 npm install --omit=dev --no-audit --no-fund >/dev/null
-cp -R index.html app.js style.css package.json package-lock.json .env.example server sample node_modules "$STAGE/app/"
-cp mac/ReCut.command mac/README.txt "$STAGE/"
-chmod +x "$STAGE/ReCut.command"
-( cd "$(dirname "$STAGE")" && zip -qry "$OUT/ReCut-mac.zip" ReCut )
+cp mac/app-template/Info.plist "$APPDIR/"
+cp mac/app-template/ReCut "$APPDIR/MacOS/ReCut"; chmod +x "$APPDIR/MacOS/ReCut"
+cp mac/app-template/ReCut.icns "$APPDIR/Resources/"
+cp -R index.html app.js style.css package.json package-lock.json server sample node_modules "$APPDIR/Resources/app/"
+rm -f "$OUT/ReCut-mac.zip"
+( cd "$STAGE" && zip -qry "$OUT/ReCut-mac.zip" ReCut.app )
 echo "$OUT/ReCut-mac.zip"

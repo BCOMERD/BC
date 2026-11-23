@@ -656,6 +656,7 @@ menu.onclick = async (e) => {
   const b = e.target.closest('button'); if (!b) return;
   if (b.dataset.act === 'save') return save();
   if (b.dataset.act === 'settings') return openSettings();
+  if (b.dataset.act === 'quit') return quitApp();
   if (dirty && !(menu._armed === b.dataset.act && Date.now() - menu._armedAt < 4000)) {
     menu._armed = b.dataset.act; menu._armedAt = Date.now(); e.stopPropagation();
     return toast('You have unsaved changes. Click again to continue without saving.', true);
@@ -797,6 +798,12 @@ $('#s-save').onclick = async () => {
 };
 $('#home-close').onclick = () => ($('#home').hidden = true);
 $('#g-go').onclick = generateProject;
+$('#g-blank').onclick = () => { newProject(); $('#home').hidden = true; };
+async function quitApp() {
+  if (dirty && server && currentName) await save(true);
+  try { await fetch('/api/quit', { method: 'POST' }); } catch {}
+  document.body.innerHTML = '<div style="display:grid;place-items:center;height:100%;color:#8d95a6;font:15px system-ui">ReCut has quit. You can close this window.</div>';
+}
 $('#p-close').onclick = () => ($('#progress').hidden = true);
 
 (async () => {
