@@ -21,6 +21,7 @@ let dirty = false;
 let commentFilter = 'open';
 let past = [], future = [];
 let audioCtx = null, recDest = null, exporting = false;
+let server = false, currentName = null; // server mode: projects live on the local ReCut server
 const mediaEls = new Map();
 const imgCache = new Map();
 const peakCache = new Map();
@@ -80,11 +81,11 @@ function setProject(p, base = '') {
   renderAll(); syncHistoryUI(); fitTimeline();
 }
 async function loadSample() {
-  dirHandle = null; urlOverrides.clear(); fileStore.clear();
+  currentName = null; dirHandle = null; urlOverrides.clear(); fileStore.clear();
   const r = await fetch('sample/project.json'); setProject(await r.json(), 'sample/');
 }
 function newProject() {
-  dirHandle = null; urlOverrides.clear(); fileStore.clear();
+  currentName = null; dirHandle = null; urlOverrides.clear(); fileStore.clear();
   const mk = (type, name) => ({ id: uid('t'), type, name, clips: [] });
   setProject({ version: 1, meta: { title: 'Untitled project', width: 1280, height: 720, fps: 30, duration: 10, status: 'draft' }, assets: {},
     tracks: [mk('text', 'Titles'), mk('text', 'Subtitles'), mk('visual', 'Video / Images'), mk('audio', 'Voiceover'), mk('audio', 'Music')] });
@@ -113,7 +114,19 @@ async function openFolder() {
 
 /* ---------- saving ---------- */
 const safeName = (s) => String(s).replace(/[^\w.\-]+/g, '_').slice(0, 60);
-async function save() {
+async function save(quiet = false) {
+  if (server && currentName) {
+    try {
+      for (const [id, f] of [...fileStore]) {           // upload media added in this session
+        const r = await fetch(`/api/projects/${currentName}/assets?filename=${encodeURIComponent(f.name)}`, { method: 'POST', body: f });
+        const { src, error } = await r.json(); if (error) throw new Error(error);
+        urlOverrides.set(src, project.assets[id].src); project.assets[id].src = src; fileStore.delete(id);
+      }
+      const r = await fetch(`/api/projects/${currentName}`, { method: 'PUT', headers: { 'content-type': 'application/json' }, body: JSON.stringify(project) });
+      if (!r.ok) throw new Error((await r.json()).error || r.statusText);
+      dirty = false; if (!quiet) toast('Saved'); return true;
+    } catch (e) { toast('Save failed: ' + e.message, true); return false; }
+  }
   const out = JSON.parse(JSON.stringify(project));
   if (dirHandle) {
     try {
@@ -438,7 +451,7 @@ function renderInspector() {
   }
 
   const cm = sec('Comment', `<textarea data-k="cm" rows="3" placeholder="What should change here? e.g. “Remove the country name”"></textarea>
-    <label class="check"><input type="checkbox" data-k="done"> Resolved</label>`);
+    <label class="check"><input type="checkbox" data-k="done"> Resolved</label>${c.aiReply ? `<div class="reply">AI: ${esc(c.aiReply)}</div>` : ''}`);
   $('[data-k=cm]', cm).value = c.comment || ''; $('[data-k=done]', cm).checked = !!c.commentDone;
   bind(cm, '[data-k=cm]', (e) => (c.comment = e.value));
   $('[data-k=done]', cm).onchange = (e) => { checkpoint(); c.commentDone = e.target.checked; refresh(); };
@@ -468,7 +481,7 @@ function renderComments() {
   for (const { t, c } of list) {
     const li = document.createElement('li'); li.className = (c.commentDone ? 'done ' : '') + (sel?.clip === c.id ? 'sel' : '');
     li.innerHTML = `<small><span class="dot" style="background:${COLORS[t.type]}"></span>${fmt(c.start)} · ${esc(t.name)} · ${esc(clipName(t, c).slice(0, 28))}</small>
-      <span class="body">${esc(c.comment)}</span><button class="rs" title="${c.commentDone ? 'Reopen' : 'Mark resolved'}">${ico('check')}</button>`;
+      <span class="body">${esc(c.comment)}</span>${c.aiReply ? `<span class="reply">AI: ${esc(c.aiReply)}</span>` : ''}<button class="rs" title="${c.commentDone ? 'Reopen' : 'Mark resolved'}">${ico('check')}</button>`;
     li.onclick = () => { seek(c.start); select(t.id, c.id); };
     $('.rs', li).onclick = (e) => { e.stopPropagation(); checkpoint(); c.commentDone = !c.commentDone; renderAll(); };
     ul.appendChild(li);
@@ -579,7 +592,7 @@ $('#btn-split').onclick = splitSelected; $('#btn-dup').onclick = duplicateSelect
 $('#btn-add-text').onclick = addText;
 $('#btn-upload').onclick = () => pickFiles('', true, addFiles);
 $('#btn-save').onclick = save; $('#btn-export').onclick = exportVideo;
-$('#btn-ai').onclick = () => copyAiRequest(allClips());
+$('#btn-ai').onclick = () => (server && currentName ? applyAiChanges() : copyAiRequest(allClips()));
 $('#btn-add-comment').onclick = addCommentToSelected;
 $('#status').onchange = (e) => { checkpoint(); project.meta.status = e.target.value; toast(`Status: ${e.target.selectedOptions[0].text}`); };
 $('#project-name').oninput = (e) => { project.meta.title = e.target.value; dirty = true; };
@@ -602,7 +615,7 @@ addEventListener('click', () => (menu.hidden = true));
 menu.onclick = async (e) => {
   const b = e.target.closest('button'); if (!b) return;
   if (dirty && !confirm('You have unsaved changes. Continue?')) return;
-  ({ 'open-folder': openFolder, 'open-file': () => $('#file-open').click(), 'open-sample': loadSample, new: newProject })[b.dataset.act]();
+  ({ home: showHome, 'open-folder': openFolder, 'open-file': () => $('#file-open').click(), 'open-sample': loadSample, new: newProject })[b.dataset.act]();
 };
 $('#file-open').onchange = async (e) => {
   const f = e.target.files[0]; if (!f) return;
@@ -647,4 +660,97 @@ addEventListener('keydown', (e) => {
 addEventListener('beforeunload', (e) => { if (dirty) { e.preventDefault(); e.returnValue = ''; } });
 addEventListener('resize', () => renderTimeline());
 
-loadSample().catch(() => { $('#empty-state').hidden = false; });
+/* ---------- server mode: home, generate, apply ---------- */
+async function runStream(url, payload, title) {
+  const box = $('#progress'), ul = $('#p-steps'), err = $('#p-err');
+  $('#p-title').textContent = title; ul.innerHTML = ''; err.textContent = ''; $('#p-close').hidden = true; box.hidden = false;
+  const steps = {};
+  const mark = (ev) => {
+    let li = steps[ev.step];
+    if (!li) { ul.querySelectorAll('li.cur').forEach((x) => { x.className = 'ok'; }); li = steps[ev.step] = document.createElement('li'); ul.appendChild(li); }
+    li.textContent = ev.msg; li.className = ev.done ? 'ok' : 'cur';
+  };
+  try {
+    const r = await fetch(url, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify(payload || {}) });
+    if (!r.body) throw new Error('No response from server');
+    const reader = r.body.getReader(), dec = new TextDecoder(); let buf = '', final = null;
+    const handle = (line) => {
+      if (!line.trim()) return;
+      const ev = JSON.parse(line);
+      if (ev.error) throw new Error(ev.error);
+      if (ev.step) mark(ev); else if (ev.done) final = ev;
+    };
+    for (;;) {
+      const { value, done } = await reader.read(); if (done) break;
+      buf += dec.decode(value, { stream: true });
+      let i; while ((i = buf.indexOf('\n')) >= 0) { const line = buf.slice(0, i); buf = buf.slice(i + 1); handle(line); }
+    }
+    handle(buf);
+    if (!final) throw new Error('The server stopped before finishing.');
+    box.hidden = true; return final;
+  } catch (e) {
+    ul.querySelectorAll('li.cur').forEach((x) => { x.className = ''; });
+    err.textContent = e.message; $('#p-close').hidden = false; throw e;
+  }
+}
+async function openServerProject(name) {
+  const r = await fetch(`/api/projects/${name}`); if (!r.ok) return toast('Could not open project', true);
+  dirHandle = null; urlOverrides.clear(); fileStore.clear();
+  currentName = name; setProject(await r.json(), `/projects/${name}/`); $('#home').hidden = true;
+}
+async function showHome() {
+  if (!server) return toast('All projects needs the ReCut server (npm start).', true);
+  $('#home').hidden = false; $('#home-close').hidden = !project;
+  try {
+    const st = await (await fetch('/api/status')).json();
+    $('#svc-status').innerHTML = `<span class="${st.anthropic ? 'ok' : 'bad'}">Claude ${st.anthropic ? 'connected' : 'key missing'}</span><span class="${st.elevenlabs ? 'ok' : 'bad'}">ElevenLabs ${st.elevenlabs ? 'connected' : 'key missing'}</span>`;
+  } catch {}
+  const list = await (await fetch('/api/projects')).json(), box = $('#proj-list');
+  box.innerHTML = list.length ? '' : '<div class="empty" style="grid-column:1/-1">No projects yet. Generate your first one above.</div>';
+  for (const p of list) {
+    const b = document.createElement('button'); b.className = 'pcard';
+    b.innerHTML = `<b>${esc(p.title)}</b><span class="meta"><span class="st ${esc(p.status)}">${{ draft: 'Draft', review: 'In review', approved: 'Approved' }[p.status] || esc(p.status)}</span>${p.width}×${p.height} · ${fmt(p.duration || 0)}</span><span class="meta">${new Date(p.updated).toLocaleString()}</span>`;
+    b.onclick = () => openServerProject(p.name); box.appendChild(b);
+  }
+  const sel = $('#g-voice');
+  if (sel.dataset.loaded) return;
+  const v = await (await fetch('/api/voices')).json();
+  if (v.error || !v.length) { sel.innerHTML = '<option value="">No voices (add ELEVENLABS_API_KEY)</option>'; return; }
+  let last = ''; try { last = localStorage.getItem('recut.voice') || ''; } catch {}
+  sel.innerHTML = '<option value="">No voiceover</option>' + v.map((x) => `<option value="${esc(x.id)}">${esc(x.name)}${x.labels?.accent ? ' · ' + esc(x.labels.accent) : ''}</option>`).join('');
+  sel.value = v.some((x) => x.id === last) ? last : v[0].id; sel.dataset.loaded = '1';
+}
+async function generateProject() {
+  const brief = $('#g-brief').value.trim(); if (!brief) return toast('Write a brief first.', true);
+  try { localStorage.setItem('recut.voice', $('#g-voice').value); } catch {}
+  try {
+    const r = await runStream('/api/generate', { brief, seconds: +$('#g-len').value, aspect: $('#g-aspect').value, voiceId: $('#g-voice').value, language: $('#g-lang').value }, 'Generating your project');
+    $('#g-brief').value = ''; await openServerProject(r.name); toast('Project ready. Review it, comment, then Apply AI changes.');
+  } catch {}
+}
+async function applyAiChanges() {
+  if (!openComments().length) return toast('No open comments. Add a comment to a clip first.', true);
+  if (!(await save(true))) return;
+  try {
+    const r = await runStream(`/api/projects/${currentName}/apply`, {}, 'Applying your comments');
+    checkpoint();
+    stop(); mediaEls.forEach((el) => el.pause()); mediaEls.clear();
+    project = r.project; dirty = false; if (sel && !findClip(sel.clip)) sel = null;
+    renderAll(); toast(`Applied ${r.log.length} change${r.log.length === 1 ? '' : 's'}. Undo with Ctrl+Z.`);
+  } catch {}
+}
+$('#btn-home').onclick = showHome;
+$('#home-close').onclick = () => ($('#home').hidden = true);
+$('#g-go').onclick = generateProject;
+$('#p-close').onclick = () => ($('#progress').hidden = true);
+
+(async () => {
+  try { const r = await fetch('/api/status'); server = r.ok && !!(await r.json()).server; } catch { server = false; }
+  $$('[data-server]').forEach((el) => (el.hidden = !server));
+  if (server) {
+    $('#btn-ai').title = 'Let Claude apply every open comment (text, voiceover, volume, timing)';
+    [...$('#btn-ai').childNodes].find((n) => n.nodeType === 3 && n.textContent.trim()).textContent = 'Apply AI changes';
+    showHome();
+  } else loadSample().catch(() => { $('#empty-state').hidden = false; });
+})();
+

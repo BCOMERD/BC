@@ -43,7 +43,7 @@
 </svg>
 
 <header id="topbar">
-  <div class="brand"><span class="logo"></span>ReCut</div>
+  <button class="brand" id="btn-home" title="All projects"><span class="logo"></span>ReCut</button>
   <input id="project-name" class="name-input" spellcheck="false" aria-label="Project name">
   <div class="group">
     <button class="ib" id="btn-undo" title="Undo (Ctrl+Z)"><svg class="i"><use href="#i-undo"/></svg></button>
@@ -65,6 +65,7 @@
   <div class="menu-wrap">
     <button id="btn-open-menu"><svg class="i"><use href="#i-folder"/></svg>Open<svg class="i sm"><use href="#i-chev"/></svg></button>
     <div class="menu" id="open-menu" hidden>
+      <button data-act="home" data-server><svg class="i"><use href="#i-folder"/></svg>All projects…<small>generate or open a project</small></button>
       <button data-act="open-folder"><svg class="i"><use href="#i-folder"/></svg>Project folder…<small>project.json + assets</small></button>
       <button data-act="open-file"><svg class="i"><use href="#i-file"/></svg>Project file…<small>project.json only</small></button>
       <button data-act="open-sample"><svg class="i"><use href="#i-video"/></svg>Sample project</button>
@@ -145,6 +146,37 @@
   </div>
 </section>
 
+<div id="home" hidden>
+  <div class="home-inner">
+    <div class="home-top">
+      <div class="brand big"><span class="logo"></span>ReCut</div>
+      <span class="spacer"></span>
+      <span id="svc-status" class="svc"></span>
+      <button id="home-close" hidden>Back to editor</button>
+    </div>
+    <section class="new-card">
+      <div>
+        <h1>New video</h1>
+        <p class="muted">Describe the video, or paste a script or research notes. Claude writes the scenes, ElevenLabs records the voice, and everything lands on separate tracks for you to review.</p>
+      </div>
+      <textarea id="g-brief" rows="6" placeholder="e.g. A 60-second Short about kolbars, the Kurdish border porters in Iran. Hook with the 0.5% figure. Use Hengaw 2024: 57 killed, 282 wounded, 19 children. End with: Full video on MORÎK."></textarea>
+      <div class="gen-row">
+        <label class="field"><span>Length</span>
+          <select id="g-len"><option value="30">30 s</option><option value="60" selected>60 s</option><option value="90">90 s</option><option value="180">3 min</option><option value="300">5 min</option><option value="600">10 min</option></select></label>
+        <label class="field"><span>Format</span>
+          <select id="g-aspect"><option value="9:16">9:16 Short / Reel</option><option value="16:9">16:9 YouTube</option><option value="1:1">1:1 Square</option></select></label>
+        <label class="field"><span>Voice (ElevenLabs)</span><select id="g-voice"><option value="">Loading voices…</option></select></label>
+        <label class="field"><span>Language</span><input id="g-lang" value="English"></label>
+      </div>
+      <div class="row end"><button id="g-go" class="primary"><svg class="i"><use href="#i-sparkles"/></svg>Generate project</button></div>
+    </section>
+    <section class="proj-sec">
+      <h2>Projects</h2>
+      <div id="proj-list"></div>
+    </section>
+  </div>
+</div>
+<div id="progress" hidden><div class="dialog"><h3 id="p-title">Working…</h3><ul id="p-steps"></ul><p id="p-err"></p><div class="row end"><button id="p-close" hidden>Close</button></div></div></div>
 <div id="toast" role="status" hidden></div>
 <div id="modal" hidden><div class="dialog"><h3 id="modal-title"></h3><p id="modal-msg" class="muted"></p><textarea id="modal-text" readonly></textarea><div class="row end"><button id="modal-copy"><svg class="i"><use href="#i-copy"/></svg>Copy</button><button id="modal-close" class="primary">Close</button></div></div></div>
 <div id="dropzone" hidden><div>Drop files to add them to the timeline</div></div>

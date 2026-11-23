@@ -2,13 +2,22 @@
 
 An AI doesn't hand you a flat video. It hands you a **project**: video/images, voiceover, music, titles and subtitles on separate tracks with exact timing. You open it, review it, edit anything, comment on any shot, and export.
 
-## Run
+## Run (full app, with AI)
+Needs Node 20+.
 ```bash
 cd editor
-python3 -m http.server 8000     # or any static file server
-# open http://localhost:8000
+npm install
+cp .env.example .env        # add ANTHROPIC_API_KEY and ELEVENLABS_API_KEY
+npm start                   # → http://localhost:5173
 ```
-No build step, no dependencies. Use **Chrome or Edge** for folder projects.
+The home screen lists your projects and has a **New video** form: describe the video (or paste a script / research notes), pick length, format and an ElevenLabs voice, and press **Generate project**. Claude writes the scenes, ElevenLabs records each line, and the project opens on separate tracks: titles, subtitles, footage slots, voiceover, music.
+
+Review it, comment on any clip, then press **Apply AI changes**: Claude reads every open comment and edits only those clips. Changed voiceover lines are re-recorded with the same voice and the timeline shifts to stay in sync. Requests it can't do (e.g. "use real footage") stay open with a note. Every apply can be undone with Ctrl+Z.
+
+Projects are saved in `editor/projects/` (or `RECUT_PROJECTS`). Your API keys stay on your machine in `.env`; the browser never sees them.
+
+### Without the server
+`python3 -m http.server` in `editor/` still runs the editor on its own (sample project, folder projects in Chrome/Edge). **Request AI changes** then copies the comments as JSON instead of applying them.
 
 ## Using it
 | Action | How |
@@ -42,6 +51,7 @@ node tools/validate.mjs path/to/project.json
 ```
 
 ## Known limits
-- Sample assets are placeholders (`tools/make-sample-assets.mjs`). No AI generation is wired into the app yet; today Claude builds the project folder and applies your comments.
+- Footage is not generated: each scene gets a placeholder slot showing what to film or find. Select it and use **Replace media**.
+- Music is not generated yet; the Music track starts empty.
 - Export is real-time WebM (`MediaRecorder`), so a 5-minute video takes 5 minutes to export. MP4 needs ffmpeg or a later conversion.
 - Not built yet: transitions, effects, keyframes, maps, multi-user review.
