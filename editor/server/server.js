@@ -8,11 +8,12 @@ import { fileURLToPath } from 'node:url';
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 loadEnv(path.join(ROOT, '.env'));
-const { planVideo, planEdits, describeError } = await import('./ai.js');
+const { planVideo, planEdits, describeError, resetClient } = await import('./ai.js');
+import os from 'node:os';
 const { speak, listVoices, hasVoice } = await import('./voice.js');
 
 const PORT = +(process.env.PORT || 5173);
-const PROJECTS = path.resolve(ROOT, process.env.RECUT_PROJECTS || 'projects');
+const PROJECTS = path.resolve(ROOT, process.env.RECUT_PROJECTS || (process.platform === 'darwin' ? path.join(os.homedir(), 'Movies', 'ReCut') : 'projects'));
 await fsp.mkdir(PROJECTS, { recursive: true });
 
 const MIME = { '.html': 'text/html; charset=utf-8', '.js': 'text/javascript; charset=utf-8', '.css': 'text/css; charset=utf-8', '.json': 'application/json',
@@ -176,6 +177,21 @@ http.createServer(async (req, res) => {
   try {
     const url = new URL(req.url, 'http://x'); const parts = url.pathname.split('/').filter(Boolean).map(decodeURIComponent);
     if (parts[0] === 'api') {
+      if (parts[1] === 'settings' && req.method === 'POST') {
+        const s = JSON.parse((await body(req, 1e5)).toString() || '{}');
+        const set = { ANTHROPIC_API_KEY: s.anthropicKey, ELEVENLABS_API_KEY: s.elevenlabsKey };
+        const envFile = path.join(ROOT, '.env');
+        let lines = fs.existsSync(envFile) ? fs.readFileSync(envFile, 'utf8').split('\n') : [];
+        for (const [k, v] of Object.entries(set)) {
+          if (typeof v !== 'string' || !v.trim()) continue;          // empty = keep the current key
+          process.env[k] = v.trim();
+          const i = lines.findIndex((l) => l.startsWith(k + '='));
+          if (i >= 0) lines[i] = `${k}=${v.trim()}`; else lines.push(`${k}=${v.trim()}`);
+        }
+        fs.writeFileSync(envFile, lines.filter((l, i) => l || i < lines.length - 1).join('\n') + '\n', { mode: 0o600 });
+        resetClient();
+        return json(res, 200, { ok: true, anthropic: !!process.env.ANTHROPIC_API_KEY, elevenlabs: hasVoice() });
+      }
       if (parts[1] === 'status') return json(res, 200, { server: true, anthropic: !!process.env.ANTHROPIC_API_KEY, elevenlabs: hasVoice(), projectsDir: PROJECTS });
       if (parts[1] === 'voices') { try { return json(res, 200, await listVoices()); } catch (e) { return json(res, 200, { error: e.message }); } }
       if (parts[1] === 'generate' && req.method === 'POST') return generate(req, res);

@@ -6,6 +6,7 @@ import { betaZodOutputFormat } from '@anthropic-ai/sdk/helpers/beta/zod';
 const MODEL = process.env.RECUT_MODEL || 'claude-opus-5-5';
 let client = null;
 const getClient = () => (client ??= new Anthropic()); // reads ANTHROPIC_API_KEY
+export const resetClient = () => { client = null; };
 
 /* ---------- 1. plan a video ---------- */
 const PlanSchema = z.object({

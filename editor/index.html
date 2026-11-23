@@ -53,6 +53,7 @@
     <button class="ib" id="btn-open-menu" title="Menu"><svg class="i"><circle cx="5" cy="12" r="1.4"/><circle cx="12" cy="12" r="1.4"/><circle cx="19" cy="12" r="1.4"/></svg></button>
     <div class="menu" id="open-menu" hidden>
       <button data-act="home" data-server><svg class="i"><use href="#i-folder"/></svg>All projects</button>
+      <button data-act="settings" data-server><svg class="i"><use href="#i-sparkles"/></svg>API keys…</button>
       <button data-act="new"><svg class="i"><use href="#i-plus"/></svg>New project</button>
       <button data-act="open-folder"><svg class="i"><use href="#i-folder"/></svg>Open project folder…</button>
       <button data-act="open-file"><svg class="i"><use href="#i-file"/></svg>Open project file…</button>
@@ -140,6 +141,7 @@
       <div class="brand big"><span class="logo"></span>ReCut</div>
       <span class="spacer"></span>
       <span id="svc-status" class="svc"></span>
+      <button id="btn-settings"><svg class="i"><path d="M12 15a3 3 0 1 0 0-6 3 3 0 0 0 0 6z"/><path d="M19.4 15a1.7 1.7 0 0 0 .3 1.8l.1.1a2 2 0 1 1-2.8 2.8l-.1-.1a1.7 1.7 0 0 0-1.8-.3 1.7 1.7 0 0 0-1 1.5V21a2 2 0 1 1-4 0v-.1a1.7 1.7 0 0 0-1.1-1.5 1.7 1.7 0 0 0-1.8.3l-.1.1a2 2 0 1 1-2.8-2.8l.1-.1a1.7 1.7 0 0 0 .3-1.8 1.7 1.7 0 0 0-1.5-1H3a2 2 0 1 1 0-4h.1a1.7 1.7 0 0 0 1.5-1.1 1.7 1.7 0 0 0-.3-1.8l-.1-.1a2 2 0 1 1 2.8-2.8l.1.1a1.7 1.7 0 0 0 1.8.3H9a1.7 1.7 0 0 0 1-1.5V3a2 2 0 1 1 4 0v.1a1.7 1.7 0 0 0 1 1.5 1.7 1.7 0 0 0 1.8-.3l.1-.1a2 2 0 1 1 2.8 2.8l-.1.1a1.7 1.7 0 0 0-.3 1.8V9a1.7 1.7 0 0 0 1.5 1H21a2 2 0 1 1 0 4h-.1a1.7 1.7 0 0 0-1.5 1z"/></svg>Settings</button>
       <button id="home-close" hidden>Back to editor</button>
     </div>
     <section class="new-card">
@@ -164,6 +166,13 @@
     </section>
   </div>
 </div>
+<div id="settings" hidden><div class="dialog">
+  <h3>Connect your AI accounts</h3>
+  <p class="muted">Keys are saved only on this Mac (in the app folder, file <code>.env</code>). Leave a field empty to keep the current key.</p>
+  <label class="field"><span>Anthropic API key (writes scripts, applies comments) · console.anthropic.com → API Keys</span><input id="s-anthropic" type="password" placeholder="sk-ant-…" autocomplete="off"></label>
+  <label class="field"><span>ElevenLabs API key (records the voice) · elevenlabs.io → Profile → API Keys</span><input id="s-eleven" type="password" placeholder="sk_…" autocomplete="off"></label>
+  <div class="row end"><button id="s-cancel">Cancel</button><button id="s-save" class="primary">Save keys</button></div>
+</div></div>
 <div id="progress" hidden><div class="dialog"><h3 id="p-title">Working…</h3><ul id="p-steps"></ul><p id="p-err"></p><div class="row end"><button id="p-close" hidden>Close</button></div></div></div>
 <div id="toast" role="status" hidden></div>
 <div id="modal" hidden><div class="dialog"><h3 id="modal-title"></h3><p id="modal-msg" class="muted"></p><textarea id="modal-text" readonly></textarea><div class="row end"><button id="modal-copy"><svg class="i"><use href="#i-copy"/></svg>Copy</button><button id="modal-close" class="primary">Close</button></div></div></div>

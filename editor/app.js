@@ -278,7 +278,8 @@ async function exportVideo() {
   exporting = true; stop(); seek(0); ensureAudioGraph();
   const stream = canvas.captureStream(project.meta.fps || 30);
   recDest.stream.getAudioTracks().forEach((t) => stream.addTrack(t));
-  const mime = ['video/webm;codecs=vp9,opus', 'video/webm;codecs=vp8,opus', 'video/webm'].find((m) => MediaRecorder.isTypeSupported(m));
+  const mime = ['video/mp4;codecs=avc1,mp4a.40.2', 'video/mp4', 'video/webm;codecs=vp9,opus', 'video/webm;codecs=vp8,opus', 'video/webm'].find((m) => MediaRecorder.isTypeSupported(m));
+  const ext = mime.startsWith('video/mp4') ? 'mp4' : 'webm';
   const rec = new MediaRecorder(stream, { mimeType: mime, videoBitsPerSecond: 8e6 });
   const chunks = []; rec.ondataavailable = (e) => e.data.size && chunks.push(e.data);
   const done = new Promise((r) => (rec.onstop = r));
@@ -289,8 +290,8 @@ async function exportVideo() {
     if (!playing) { clearInterval(iv); res(); } }, 150); });
   rec.stop(); await done;
   btn.disabled = false; btn.lastChild.textContent = 'Export'; exporting = false;
-  downloadBlob(new Blob(chunks, { type: 'video/webm' }), safeName(project.meta.title || 'video') + '.webm');
-  toast('Video exported (WebM)');
+  downloadBlob(new Blob(chunks, { type: mime.split(';')[0] }), safeName(project.meta.title || 'video') + '.' + ext);
+  toast(`Video exported (${ext.toUpperCase()})`);
 }
 
 /* ---------- waveform ---------- */
@@ -654,12 +655,13 @@ addEventListener('click', () => (menu.hidden = true));
 menu.onclick = async (e) => {
   const b = e.target.closest('button'); if (!b) return;
   if (b.dataset.act === 'save') return save();
+  if (b.dataset.act === 'settings') return openSettings();
   if (dirty && !(menu._armed === b.dataset.act && Date.now() - menu._armedAt < 4000)) {
     menu._armed = b.dataset.act; menu._armedAt = Date.now(); e.stopPropagation();
     return toast('You have unsaved changes. Click again to continue without saving.', true);
   }
   menu._armed = null;
-  ({ home: showHome, 'open-folder': openFolder, 'open-file': () => $('#file-open').click(), 'open-sample': loadSample, new: newProject })[b.dataset.act]();
+  ({ home: showHome, settings: openSettings, 'open-folder': openFolder, 'open-file': () => $('#file-open').click(), 'open-sample': loadSample, new: newProject })[b.dataset.act]();
 };
 $('#file-open').onchange = async (e) => {
   const f = e.target.files[0]; if (!f) return;
@@ -747,6 +749,7 @@ async function showHome() {
   $('#home').hidden = false; $('#home-close').hidden = !project;
   try {
     const st = await (await fetch('/api/status')).json();
+    if (!st.anthropic) setTimeout(openSettings, 300);
     $('#svc-status').innerHTML = `<span class="${st.anthropic ? 'ok' : 'bad'}">Claude ${st.anthropic ? 'connected' : 'key missing'}</span><span class="${st.elevenlabs ? 'ok' : 'bad'}">ElevenLabs ${st.elevenlabs ? 'connected' : 'key missing'}</span>`;
   } catch {}
   const list = await (await fetch('/api/projects')).json(), box = $('#proj-list');
@@ -784,6 +787,14 @@ async function applyAiChanges() {
   } catch {}
 }
 $('#btn-home').onclick = showHome;
+function openSettings() { $('#s-anthropic').value = ''; $('#s-eleven').value = ''; $('#settings').hidden = false; }
+$('#btn-settings').onclick = openSettings;
+$('#s-cancel').onclick = () => ($('#settings').hidden = true);
+$('#s-save').onclick = async () => {
+  const r = await fetch('/api/settings', { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify({ anthropicKey: $('#s-anthropic').value, elevenlabsKey: $('#s-eleven').value }) });
+  if (!r.ok) return toast('Could not save keys', true);
+  $('#settings').hidden = true; $('#g-voice').dataset.loaded = ''; toast('Keys saved on this Mac'); showHome();
+};
 $('#home-close').onclick = () => ($('#home').hidden = true);
 $('#g-go').onclick = generateProject;
 $('#p-close').onclick = () => ($('#progress').hidden = true);
