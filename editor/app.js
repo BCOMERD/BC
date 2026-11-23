@@ -481,7 +481,8 @@ function renderInspector() {
 
   const ac = sec('', '<div class="btnrow"></div>').firstChild;
   const mk = (icon, label, fn, cls = '') => { const b = document.createElement('button'); b.className = cls; b.innerHTML = ico(icon) + label; b.onclick = fn; ac.appendChild(b); };
-  if (a) mk('swap', 'Replace media', () => pickFiles(a.type, false, (files) => { const id = createAsset(files[0]); checkpoint(); c.asset = id; c.source = 'user'; renderAll(); }));
+  // a picture can replace a video and back; the new file plays from its own start
+  if (a) mk('swap', 'Replace media', () => pickFiles(a.type === 'audio' ? 'audio' : 'image,video', false, (files) => { const id = createAsset(files[0]); checkpoint(); c.asset = id; c.source = 'user'; c.in = 0; renderAll(); }));
   mk('sparkles', 'Copy AI request', () => copyAiRequest([f]));
   mk('trash', 'Delete', deleteSelected, 'danger');
 }
@@ -591,7 +592,7 @@ async function addFiles(files) {          // dropped files go straight onto the 
   }
 }
 function pickFiles(type, multiple, cb) {
-  const inp = $('#file-add'); inp.accept = type ? type + '/*' : 'image/*,video/*,audio/*'; inp.multiple = multiple; inp.value = '';
+  const inp = $('#file-add'); inp.accept = type ? type.split(',').map((x) => x + '/*').join(',') : 'image/*,video/*,audio/*'; inp.multiple = multiple; inp.value = '';
   inp.onchange = () => inp.files.length && cb([...inp.files]); inp.click();
 }
 function splitSelected() {
