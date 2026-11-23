@@ -1,0 +1,28 @@
+#!/bin/bash
+# ReCut.app launcher: starts the local server in the background (if needed) and opens the editor window.
+export PATH="/opt/homebrew/bin:/usr/local/bin:$PATH"
+APP="$(cd "$(dirname "$0")/../Resources/app" && pwd)"
+SUPPORT="$HOME/Library/Application Support/ReCut"
+mkdir -p "$SUPPORT" "$HOME/Library/Logs"
+export RECUT_ENV="$SUPPORT/.env"
+PORT="${PORT:-5173}"; URL="http://localhost:$PORT"
+LOG="$HOME/Library/Logs/ReCut.log"
+
+say_err() { osascript -e "display dialog \"$1\" with title \"ReCut\" buttons {\"OK\"} default button 1 with icon caution" >/dev/null 2>&1; }
+
+if ! command -v node >/dev/null 2>&1; then
+  say_err "ReCut needs Node.js (free). The download page will open: install the LTS version, then open ReCut again."
+  open "https://nodejs.org/en/download"; exit 1
+fi
+
+if ! curl -s "$URL/api/status" 2>/dev/null | grep -q '"server":true'; then
+  cd "$APP" && nohup node server/server.js >"$LOG" 2>&1 &
+  for i in $(seq 1 60); do sleep 0.25; curl -s "$URL/api/status" >/dev/null 2>&1 && break; done
+  if ! curl -s "$URL/api/status" >/dev/null 2>&1; then say_err "ReCut could not start. Details are in ~/Library/Logs/ReCut.log"; exit 1; fi
+fi
+
+# Open as its own app window (no tabs, no address bar) when Chrome or Edge is installed.
+for B in "Google Chrome" "Microsoft Edge" "Brave Browser"; do
+  if [ -d "/Applications/$B.app" ]; then open -na "$B" --args --app="$URL" --window-size=1440,900; exit 0; fi
+done
+open "$URL"

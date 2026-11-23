@@ -35,3 +35,9 @@
 .Trashes
 ehthumbs.db
 Thumbs.db
+
+# ReCut
+node_modules/
+.env
+editor/projects/
+editor/dist/
