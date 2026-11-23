@@ -4,7 +4,8 @@
 
 const $ = (s, r = document) => r.querySelector(s);
 const $$ = (s, r = document) => [...r.querySelectorAll(s)];
-const HEAD_W = 150;
+const HEAD_W = 96;
+let lib = 'media';                   // left panel tab
 const COLORS = { visual: 'var(--visual)', audio: 'var(--audio)', text: 'var(--text)' };
 const ICONS = { visual: 'video', audio: 'music', text: 'type', image: 'image', video: 'video' };
 
@@ -61,6 +62,7 @@ const snap = () => JSON.stringify({ meta: project.meta, tracks: project.tracks }
 function checkpoint() { past.push(snap()); if (past.length > 100) past.shift(); future = []; dirty = true; syncHistoryUI(); }
 function restore(s) {
   const o = JSON.parse(s); project.meta = o.meta; project.tracks = o.tracks;
+  canvas.width = project.meta.width; canvas.height = project.meta.height;
   if (sel && !findClip(sel.clip)) sel = null;
   dirty = true; renderAll(); syncHistoryUI();
 }
@@ -86,9 +88,7 @@ async function loadSample() {
 }
 function newProject() {
   currentName = null; dirHandle = null; urlOverrides.clear(); fileStore.clear();
-  const mk = (type, name) => ({ id: uid('t'), type, name, clips: [] });
-  setProject({ version: 1, meta: { title: 'Untitled project', width: 1280, height: 720, fps: 30, duration: 10, status: 'draft' }, assets: {},
-    tracks: [mk('text', 'Titles'), mk('text', 'Subtitles'), mk('visual', 'Video / Images'), mk('audio', 'Voiceover'), mk('audio', 'Music')] });
+  setProject({ version: 1, meta: { title: 'Untitled project', width: 1920, height: 1080, fps: 30, duration: 0, status: 'draft' }, assets: {}, tracks: [] });
 }
 async function openFolder() {
   if (!window.showDirectoryPicker) return toast('Folder access needs Chrome, Edge or another Chromium browser. Use “Project file…” instead.', true);
@@ -333,10 +333,12 @@ function renderTimeline() {
   renderRuler();
   const root = $('#tracks'); root.innerHTML = '';
   const width = (duration() + 3) * pps;
-  for (const tr of project.tracks) {
+  const visible = project.tracks.filter((t) => t.clips.length);
+  if (!visible.length) root.innerHTML = '<div class="tl-empty"><div><b>Your timeline is empty</b>Drag photos, videos or music here, or use Import on the left.</div></div>';
+  for (const tr of visible) {
     const row = document.createElement('div'); row.className = 'track' + (tr.hidden ? ' hidden' : '') + (tr.muted ? ' muted' : '');
     const head = document.createElement('div'); head.className = 'thead';
-    head.innerHTML = `<span class="ic" style="background:${COLORS[tr.type]}">${ico(ICONS[tr.type])}</span><span class="tn" title="${esc(tr.name)}">${esc(tr.name)}</span>`;
+    head.innerHTML = `<span class="ic" style="background:${COLORS[tr.type]}" title="${esc(tr.name)}">${ico(ICONS[tr.type])}</span>`;
     const tg = document.createElement('button');
     if (tr.type === 'audio') { tg.className = tr.muted ? 'off' : ''; tg.title = tr.muted ? 'Unmute track' : 'Mute track'; tg.innerHTML = ico(tr.muted ? 'volume-off' : 'volume'); tg.onclick = () => { checkpoint(); tr.muted = !tr.muted; renderTimeline(); }; }
     else { tg.className = tr.hidden ? 'off' : ''; tg.title = tr.hidden ? 'Show track' : 'Hide track'; tg.innerHTML = ico(tr.hidden ? 'eye-off' : 'eye'); tg.onclick = () => { checkpoint(); tr.hidden = !tr.hidden; renderTimeline(); drawFrame(); }; }
@@ -385,17 +387,39 @@ function select(trackId, clipId) { sel = { track: trackId, clip: clipId }; tx = 
 /* ---------- media library ---------- */
 function renderMedia() {
   const box = $('#media-list'); box.innerHTML = '';
-  const entries = Object.entries(project.assets);
-  if (!entries.length) { box.innerHTML = '<div class="empty" style="grid-column:1/-1">No media yet.<br>Upload files or drop them here.</div>'; return; }
-  for (const [id, a] of entries) {
-    const card = document.createElement('div'); card.className = 'card';
-    const th = a.type === 'image' ? `style="background-image:url('${resolve(a.src)}')"` : '';
-    card.innerHTML = `<div class="thumb" ${th}>${a.type === 'image' ? '' : ico(ICONS[a.type])}</div>
-      <div class="meta"><span class="nm" title="${esc(a.name || id)}">${esc(a.name || id)}</span>
-      <span class="sub"><span class="pill ${a.source === 'user' ? 'you' : 'ai'}">${a.source === 'user' ? 'YOU' : 'AI'}</span>${a.type}</span></div>
-      <button class="add" title="Add to timeline at playhead">${ico('plus')}</button>`;
-    $('.add', card).onclick = () => addAssetToTimeline(id);
-    box.appendChild(card);
+  $$('.rb').forEach((b) => b.classList.toggle('on', b.dataset.lib === lib));
+  const used = new Set(allClips().map(({ c }) => c.asset));
+  const del = (id) => (e) => {
+    e.stopPropagation();
+    if (used.has(id)) return toast('This file is on the timeline. Delete its clips first.', true);
+    delete project.assets[id]; fileStore.delete(id); renderMedia();
+  };
+  if (lib === 'text') {
+    box.innerHTML = '<div class="libhead">Add text</div>';
+    const presets = [['plain', 'Default text', 'font-size:18px'], ['title', 'Title', 'font-size:26px;font-weight:800'], ['subtitle', 'Subtitle', 'font-size:15px;background:rgba(0,0,0,.6);padding:2px 8px;color:#ffe27a']];
+    for (const [k, label, st] of presets) {
+      const b = document.createElement('button'); b.className = 'tpreset'; b.innerHTML = `<span style="${st}">${label}</span>`;
+      b.onclick = () => addText(k); box.appendChild(b);
+    }
+    return;
+  }
+  const isAudio = lib === 'audio';
+  const imp = document.createElement('button'); imp.className = 'import';
+  imp.innerHTML = `${ico('upload')}Import ${isAudio ? 'audio' : 'media'}<small>${isAudio ? 'Music, voiceover, sound effects' : 'Videos and photos'} · or drop files anywhere</small>`;
+  imp.onclick = () => pickFiles(isAudio ? 'audio' : '', true, (files) => importFiles(files)); box.appendChild(imp);
+  const entries = Object.entries(project.assets).filter(([, x]) => (isAudio ? x.type === 'audio' : x.type !== 'audio'));
+  for (const [id, x] of entries) {
+    if (isAudio) {
+      const row = document.createElement('div'); row.className = 'arow'; row.title = 'Add at playhead';
+      row.innerHTML = `${ico('music')}<span class="nm">${esc(x.name || id)}</span><button class="ib del2" title="Remove from library">${ico('trash')}</button>`;
+      row.onclick = () => addAssetToTimeline(id); $('.del2', row).onclick = del(id); box.appendChild(row);
+    } else {
+      const card = document.createElement('div'); card.className = 'card'; card.title = 'Add at playhead';
+      const th = x.type === 'image' ? `style="background-image:url('${resolve(x.src)}')"` : '';
+      card.innerHTML = `<div class="thumb" ${th}>${x.type === 'image' ? '' : ico('video')}</div><div class="meta"><span class="nm">${esc(x.name || id)}</span></div>
+        <button class="add" title="Add at playhead">${ico('plus')}</button><button class="del" title="Remove from library">${ico('trash')}</button>`;
+      card.onclick = () => addAssetToTimeline(id); $('.del', card).onclick = del(id); box.appendChild(card);
+    }
   }
 }
 
@@ -406,9 +430,7 @@ function renderInspector() {
   $('#btn-split').disabled = $('#btn-del').disabled = $('#btn-dup').disabled = !sel;
   const f = selected();
   if (!f) {
-    box.innerHTML = `<div class="empty">Select a clip on the timeline to edit it.</div>
-      <div class="sec"><h4>Project</h4><div class="muted">${project.meta.width}×${project.meta.height} · ${project.meta.fps} fps · ${fmt(duration())} · ${project.tracks.length} tracks</div></div>
-      <div class="sec"><h4>Shortcuts</h4><div class="muted">Space play · S split · Del delete · Ctrl+Z undo · Ctrl+D duplicate · ←/→ step</div></div>`;
+    box.innerHTML = `<div class="empty">Select a clip on the timeline to edit it.</div>`;
     return;
   }
   const { t: tr, c } = f, a = assetOf(c);
@@ -469,6 +491,9 @@ function updateCounts() {
   const n = openComments().length;
   for (const id of ['#open-count', '#tab-count']) { const b = $(id); b.textContent = n; b.dataset.n = n; }
   $('#status').value = project.meta.status || 'draft';
+  const asp = `${project.meta.width}x${project.meta.height}`, sel_ = $('#aspect');
+  if (![...sel_.options].some((o) => o.value === asp)) sel_.add(new Option(`${project.meta.width}×${project.meta.height}`, asp));
+  sel_.value = asp;
   $('#project-name').value = project.meta.title || '';
 }
 function renderComments() {
@@ -520,33 +545,44 @@ function createAsset(file) {
   project.assets[id] = { type, src: URL.createObjectURL(file), name: file.name.replace(/\.[^.]+$/, ''), source: 'user' };
   return id;
 }
-function trackFor(type) {
-  const want = type === 'text' ? 'text' : type === 'audio' ? 'audio' : 'visual';
-  let tr = project.tracks.find((t) => t.type === want && (want !== 'text' || /title/i.test(t.name))) || project.tracks.find((t) => t.type === want);
-  if (!tr) { tr = { id: uid('t'), type: want, name: { text: 'Titles', audio: 'Audio', visual: 'Video / Images' }[want], clips: [] }; project.tracks.push(tr); }
+const KIND = (type) => (type === 'text' ? 'text' : type === 'audio' ? 'audio' : 'visual');
+const NAMES = { text: 'Text', audio: 'Audio', visual: 'Video' };
+/** A track of this kind with room at [at, at+dur); creates one (CapCut-style) when every track is busy. */
+function trackFor(type, at, dur) {
+  const want = KIND(type);
+  const free = (t) => t.type === want && !t.clips.some((c) => at < c.start + c.duration - 1e-6 && at + dur > c.start + 1e-6);
+  let tr = project.tracks.find(free);
+  if (!tr) {
+    tr = { id: uid('t'), type: want, name: NAMES[want], clips: [] };
+    const firstVisual = project.tracks.findIndex((t) => t.type === 'visual'), firstAudio = project.tracks.findIndex((t) => t.type === 'audio');
+    const idx = want === 'text' ? 0 : want === 'visual' ? (firstVisual >= 0 ? firstVisual : firstAudio >= 0 ? firstAudio : project.tracks.length) : project.tracks.length;
+    project.tracks.splice(idx, 0, tr);
+  }
   return tr;
 }
-function placeStart(tr, s, d) {
-  if (tr.type === 'visual') return s;
-  for (let guard = 0; guard < 100; guard++) {
-    const hit = tr.clips.find((c) => s < c.start + c.duration - 1e-6 && s + d > c.start + 1e-6);
-    if (!hit) break; s = hit.start + hit.duration;
-  }
-  return s;
-}
 async function addAssetToTimeline(id, at = time) {
-  const a = project.assets[id], tr = trackFor(a.type), dur = a.type === 'image' ? 4 : await probe(resolve(a.src), a.type);
+  const a = project.assets[id], dur = a.type === 'image' ? 4 : await probe(resolve(a.src), a.type);
   checkpoint();
-  const c = { id: uid('c'), asset: id, start: round1(placeStart(tr, at, dur)), duration: dur, source: 'user' };
+  at = round1(at); const tr = trackFor(a.type, at, dur);
+  const c = { id: uid('c'), asset: id, start: at, duration: dur, source: 'user' };
   if (a.type === 'audio') { c.in = 0; c.volume = 1; } else if (a.type === 'video') { c.in = 0; c.volume = 1; c.transform = { x: 0, y: 0, scale: 1 }; } else c.transform = { x: 0, y: 0, scale: 1 };
   tr.clips.push(c); select(tr.id, c.id); renderAll(); return c;
 }
-function addText() {
-  const tr = trackFor('text'); checkpoint();
-  const c = { id: uid('c'), start: round1(placeStart(tr, time, 3)), duration: 3, text: 'New text', style: { size: 56, color: '#ffffff', y: 0.5, bg: '' }, source: 'user' };
+function addText(kind = 'plain') {
+  checkpoint();
+  const H = project.meta.height, at = round1(time), tr = trackFor('text', at, 3);
+  const style = { plain: { size: Math.round(H * 0.06), color: '#ffffff', y: 0.5, bg: '' },
+    title: { size: Math.round(H * 0.09), color: '#ffffff', y: 0.3, bg: '' },
+    subtitle: { size: Math.round(H * 0.045), color: '#ffe27a', y: 0.85, bg: 'rgba(0,0,0,.55)' } }[kind];
+  const c = { id: uid('c'), start: at, duration: 3, text: { plain: 'Your text', title: 'Title', subtitle: 'Subtitle' }[kind], style, source: 'user' };
   tr.clips.push(c); select(tr.id, c.id); renderAll();
 }
-async function addFiles(files) {
+function importFiles(files) {           // add to the library only
+  const ok = files.filter((f) => /^(image|video|audio)\//.test(f.type));
+  if (ok.length < files.length) toast('Some files were skipped: unsupported type', true);
+  ok.forEach(createAsset); renderMedia(); if (ok.length) toast(`Imported ${ok.length} file${ok.length > 1 ? 's' : ''}. Click one to add it.`);
+}
+async function addFiles(files) {          // dropped files go straight onto the timeline
   let at = time;
   for (const f of files) {
     if (!/^(image|video|audio)\//.test(f.type)) { toast(`Skipped ${f.name}: unsupported type`, true); continue; }
@@ -569,7 +605,7 @@ function splitSelected() {
 function duplicateSelected() {
   const f = selected(); if (!f) return; const { t, c } = f; checkpoint();
   const n = JSON.parse(JSON.stringify(c)); n.id = uid('c'); delete n.comment; delete n.commentDone; n.source = 'user';
-  n.start = round1(placeStart(t, c.start + c.duration, c.duration)); t.clips.push(n); select(t.id, n.id); renderAll();
+  n.start = round1(c.start + c.duration); const tr = trackFor(t.type, n.start, n.duration); tr.clips.push(n); select(tr.id, n.id); renderAll();
 }
 function deleteSelected() {
   const f = selected(); if (!f) return; checkpoint();
@@ -589,9 +625,12 @@ $('#btn-play').onclick = () => (playing ? stop() : play());
 $('#btn-start').onclick = () => seek(0);
 $('#btn-undo').onclick = undo; $('#btn-redo').onclick = redo;
 $('#btn-split').onclick = splitSelected; $('#btn-dup').onclick = duplicateSelected; $('#btn-del').onclick = deleteSelected;
-$('#btn-add-text').onclick = addText;
-$('#btn-upload').onclick = () => pickFiles('', true, addFiles);
-$('#btn-save').onclick = save; $('#btn-export').onclick = exportVideo;
+$('#btn-export').onclick = exportVideo;
+$$('.rb').forEach((b) => (b.onclick = () => { lib = b.dataset.lib; renderMedia(); }));
+$('#aspect').onchange = (e) => {
+  const [w, h] = e.target.value.split('x').map(Number); checkpoint();
+  project.meta.width = w; project.meta.height = h; canvas.width = w; canvas.height = h; drawFrame();
+};
 $('#btn-ai').onclick = () => (server && currentName ? applyAiChanges() : copyAiRequest(allClips()));
 $('#btn-add-comment').onclick = addCommentToSelected;
 $('#status').onchange = (e) => { checkpoint(); project.meta.status = e.target.value; toast(`Status: ${e.target.selectedOptions[0].text}`); };
@@ -614,6 +653,7 @@ $('#btn-open-menu').onclick = (e) => { e.stopPropagation(); menu.hidden = !menu.
 addEventListener('click', () => (menu.hidden = true));
 menu.onclick = async (e) => {
   const b = e.target.closest('button'); if (!b) return;
+  if (b.dataset.act === 'save') return save();
   if (dirty && !(menu._armed === b.dataset.act && Date.now() - menu._armedAt < 4000)) {
     menu._armed = b.dataset.act; menu._armedAt = Date.now(); e.stopPropagation();
     return toast('You have unsaved changes. Click again to continue without saving.', true);
@@ -755,6 +795,6 @@ $('#p-close').onclick = () => ($('#progress').hidden = true);
     $('#btn-ai').title = 'Let Claude apply every open comment (text, voiceover, volume, timing)';
     [...$('#btn-ai').childNodes].find((n) => n.nodeType === 3 && n.textContent.trim()).textContent = 'Apply AI changes';
     showHome();
-  } else loadSample().catch(() => { $('#empty-state').hidden = false; });
+  } else newProject();
 })();
 

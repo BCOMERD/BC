@@ -45,48 +45,32 @@
 <header id="topbar">
   <button class="brand" id="btn-home" title="All projects"><span class="logo"></span>ReCut</button>
   <input id="project-name" class="name-input" spellcheck="false" aria-label="Project name">
-  <div class="group">
-    <button class="ib" id="btn-undo" title="Undo (Ctrl+Z)"><svg class="i"><use href="#i-undo"/></svg></button>
-    <button class="ib" id="btn-redo" title="Redo (Ctrl+Shift+Z)"><svg class="i"><use href="#i-redo"/></svg></button>
-  </div>
   <span class="spacer"></span>
-
-  <label class="status-wrap" title="Review status">
-    <span class="muted">Status</span>
-    <select id="status">
-      <option value="draft">Draft</option>
-      <option value="review">In review</option>
-      <option value="approved">Approved</option>
-    </select>
-  </label>
-  <button id="btn-ai" class="ai" title="Copy all open comments as a revision request for the AI">
-    <svg class="i"><use href="#i-sparkles"/></svg>Request AI changes<span class="badge" id="open-count">0</span>
-  </button>
+  <button class="ib" id="btn-undo" title="Undo (Ctrl+Z)"><svg class="i"><use href="#i-undo"/></svg></button>
+  <button class="ib" id="btn-redo" title="Redo (Ctrl+Shift+Z)"><svg class="i"><use href="#i-redo"/></svg></button>
+  <button id="btn-ai" class="ai" title="Send your comments to the AI"><svg class="i"><use href="#i-sparkles"/></svg>Request AI changes<span class="badge" id="open-count">0</span></button>
   <div class="menu-wrap">
-    <button id="btn-open-menu"><svg class="i"><use href="#i-folder"/></svg>Open<svg class="i sm"><use href="#i-chev"/></svg></button>
+    <button class="ib" id="btn-open-menu" title="Menu"><svg class="i"><circle cx="5" cy="12" r="1.4"/><circle cx="12" cy="12" r="1.4"/><circle cx="19" cy="12" r="1.4"/></svg></button>
     <div class="menu" id="open-menu" hidden>
-      <button data-act="home" data-server><svg class="i"><use href="#i-folder"/></svg>All projects…<small>generate or open a project</small></button>
-      <button data-act="open-folder"><svg class="i"><use href="#i-folder"/></svg>Project folder…<small>project.json + assets</small></button>
-      <button data-act="open-file"><svg class="i"><use href="#i-file"/></svg>Project file…<small>project.json only</small></button>
-      <button data-act="open-sample"><svg class="i"><use href="#i-video"/></svg>Sample project</button>
-      <button data-act="new"><svg class="i"><use href="#i-plus"/></svg>New empty project</button>
+      <button data-act="home" data-server><svg class="i"><use href="#i-folder"/></svg>All projects</button>
+      <button data-act="new"><svg class="i"><use href="#i-plus"/></svg>New project</button>
+      <button data-act="open-folder"><svg class="i"><use href="#i-folder"/></svg>Open project folder…</button>
+      <button data-act="open-file"><svg class="i"><use href="#i-file"/></svg>Open project file…</button>
+      <button data-act="open-sample"><svg class="i"><use href="#i-video"/></svg>Open sample project</button>
+      <button data-act="save"><svg class="i"><use href="#i-save"/></svg>Save <small>Ctrl+S</small></button>
     </div>
   </div>
-  <button id="btn-save" title="Save (Ctrl+S)"><svg class="i"><use href="#i-save"/></svg>Save</button>
   <button id="btn-export" class="primary" title="Render the video"><svg class="i"><use href="#i-download"/></svg>Export</button>
   <input type="file" id="file-open" accept=".json,application/json" hidden>
 </header>
 
 <aside id="media">
-  <div class="panel-head">
-    <h2>Media</h2>
-    <button id="btn-upload" title="Add files to the project"><svg class="i"><use href="#i-upload"/></svg>Upload</button>
-  </div>
+  <nav class="rail" aria-label="Library">
+    <button class="rb on" data-lib="media"><svg class="i"><use href="#i-video"/></svg>Media</button>
+    <button class="rb" data-lib="audio"><svg class="i"><use href="#i-music"/></svg>Audio</button>
+    <button class="rb" data-lib="text"><svg class="i"><use href="#i-type"/></svg>Text</button>
+  </nav>
   <div id="media-list"></div>
-  <div class="panel-foot">
-    <button id="btn-add-text"><svg class="i"><use href="#i-type"/></svg>Add text at playhead</button>
-    <p class="hint">Tip: drop video, image or audio files anywhere on the window.</p>
-  </div>
   <input type="file" id="file-add" multiple accept="image/*,video/*,audio/*" hidden>
 </aside>
 
@@ -99,12 +83,14 @@
     </div>
   </div>
   <div id="transport">
-    <span class="tc" id="tc-now">0:00.0</span>
+    <span class="tc"><span id="tc-now">0:00.0</span> <span class="muted">/ <span id="tc-total">0:00.0</span></span></span>
     <div class="group center">
       <button class="ib" id="btn-start" title="Go to start (Home)"><svg class="i"><use href="#i-skip"/></svg></button>
       <button class="ib play" id="btn-play" title="Play / pause (Space)"><svg class="i"><use href="#i-play"/></svg></button>
     </div>
-    <span class="tc muted" id="tc-total">0:00.0</span>
+    <select id="aspect" title="Canvas ratio" aria-label="Canvas ratio">
+      <option value="1920x1080">16:9</option><option value="1080x1920">9:16</option><option value="1080x1080">1:1</option><option value="1080x1350">4:5</option>
+    </select>
   </div>
 </main>
 
@@ -115,6 +101,8 @@
   </div>
   <div id="tab-props" class="tabpane"></div>
   <div id="tab-comments" class="tabpane" hidden>
+    <label class="field"><span>Review status</span>
+      <select id="status"><option value="draft">Draft</option><option value="review">In review</option><option value="approved">Approved</option></select></label>
     <div class="composer">
       <textarea id="new-comment" rows="2" placeholder="Select a clip, then describe what should change…"></textarea>
       <button id="btn-add-comment" class="primary" disabled><svg class="i"><use href="#i-message"/></svg>Add comment to selected clip</button>
@@ -128,14 +116,14 @@
 
 <section id="timeline">
   <div id="tl-toolbar">
-    <button id="btn-split" title="Split at playhead (S)"><svg class="i"><use href="#i-scissors"/></svg>Split</button>
-    <button id="btn-dup" title="Duplicate (Ctrl+D)"><svg class="i"><use href="#i-copy-plus"/></svg>Duplicate</button>
-    <button id="btn-del" title="Delete (Del)"><svg class="i"><use href="#i-trash"/></svg>Delete</button>
+    <button class="ib" id="btn-split" title="Split at playhead (S)"><svg class="i"><use href="#i-scissors"/></svg></button>
+    <button class="ib" id="btn-dup" title="Duplicate (Ctrl+D)"><svg class="i"><use href="#i-copy-plus"/></svg></button>
+    <button class="ib" id="btn-del" title="Delete (Del)"><svg class="i"><use href="#i-trash"/></svg></button>
     <span class="spacer"></span>
     <button class="ib" id="zoom-out" title="Zoom out"><svg class="i"><path d="M5 12h14"/></svg></button>
     <input type="range" id="zoom" min="20" max="240" value="70" aria-label="Timeline zoom">
     <button class="ib" id="zoom-in" title="Zoom in"><svg class="i"><use href="#i-plus"/></svg></button>
-    <button id="btn-fit">Fit</button>
+    <button class="ib" id="btn-fit" title="Fit timeline"><svg class="i"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/></svg></button>
   </div>
   <div id="tl-scroll">
     <div id="tl-inner">
